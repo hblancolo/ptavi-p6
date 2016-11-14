@@ -9,15 +9,15 @@ import socket
 
 
 try:
-    SERVER = sys.argv[2].split('@')[-1].split(':')[0]  #ip del server
+    SERVER = sys.argv[2].split('@')[-1].split(':')[0]  # ip del server
     PORT = int(sys.argv[2].split(':')[-1])
     METOD = sys.argv[1].upper()  # upper me lo pone en mayusculas
     RECEIVER = sys.argv[2].split('@')[0]
     print(SERVER + ' ' + str(PORT) + ' ' + METOD + ' ' + RECEIVER)
-    
+
 except:
     sys.exit('Usage: client.py method receiver@ip:SIPport')
-    
+
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -38,7 +38,5 @@ if (METOD == 'INVITE') and (received_line == confirmation_invite):
 
 print('Recibido -- ', data.decode('utf-8'))
 print("Terminando socket...")
-
-# Cerramos todo
 my_socket.close()
 print("Fin.")
