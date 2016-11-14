@@ -22,38 +22,38 @@ class EchoHandler(socketserver.DatagramRequestHandler):
         server_metods = ['INVITE', 'ACK', 'BYE']
         metod = list_linecontent[0]
         print('peticion recibida: ', line_str)
-        
         if metod in server_metods:
             valid_metod = True
         else:
             self.wfile.write(b'SIP/2.0 405 Method Not Allowed\r\n\r\n')
-        
-        if len(list_linecontent) == 3:  #comprueba q la peticion es correcta
+
+        if len(list_linecontent) == 3:  # checkea q la peticion es correcta
             valid_request = True
         else:
             self.wfile.write(b'SIP/2.0 400 Bad Request\r\n\r\n')
-            
-        if valid_metod and valid_request:     
+
+        if valid_metod and valid_request:
             if metod == 'INVITE':
                 self.wfile.write(bytes('SIP/2.0 100 Trying\r\n\r\n'
                                        'SIP/2.0 180 Ring\r\n\r\n'
                                        'SIP/2.0 200 OK\r\n\r\n', 'utf-8'))
             elif metod == 'ACK':
-                os.system('./mp32rtp -i 127.0.0.1 -p 23032 < ' +           
+                os.system('./mp32rtp -i 127.0.0.1 -p 23032 < ' +
                           fichero_audio)
             elif metod == 'BYE':
                 self.wfile.write(b'SIP/2.0 200 OK\r\n\r\n')
-        
+
 if __name__ == "__main__":
     try:
-        serv = socketserver.UDPServer((sys.argv[1], int(sys.argv[2])), EchoHandler)
+        serv = socketserver.UDPServer((sys.argv[1], int(sys.argv[2])),
+                                      EchoHandler)
         fichero_audio = sys.argv[3]
         if not os.path.isfile(fichero_audio):
             sys.exit('File Error: ' + fichero_audio + ' does not exist')
         print("Listening...")
     except IndexError:
         sys.exit('Usage: server.py IP port audio_file')
-       
+
     try:
         serv.serve_forever()
     except KeyboardInterrupt:
