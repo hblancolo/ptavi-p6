@@ -5,6 +5,8 @@ Clase (y programa principal) para un servidor de eco en UDP simple
 """
 
 import socketserver
+import sys
+import os
 
 
 class EchoHandler(socketserver.DatagramRequestHandler):
@@ -13,19 +15,46 @@ class EchoHandler(socketserver.DatagramRequestHandler):
     """
 
     def handle(self):
-        # Escribe dirección y puerto del cliente (de tupla client_address)
-        self.wfile.write(b"Hemos recibido tu peticion")
-        while 1:
-            # Leyendo línea a línea lo que nos envía el cliente
-            line = self.rfile.read()
-            print("El cliente nos manda " + line.decode('utf-8'))
-
-            # Si no hay más líneas salimos del bucle infinito
-            if not line:
-                break
-
+        valid_metod = False
+        valid_request = False
+        line_str = self.rfile.read().decode('utf-8')
+        list_linecontent = line_str.split()
+        server_metods = ['INVITE', 'ACK', 'BYE']
+        metod = list_linecontent[0]
+        print('peticion recibida: ', line_str)
+        
+        if metod in server_metods:
+            valid_metod = True
+        else:
+            self.wfile.write(b'SIP/2.0 405 Method Not Allowed\r\n\r\n')
+        
+        if len(list_linecontent) == 3:  #comprueba q la peticion es correcta
+            valid_request = True
+        else:
+            self.wfile.write(b'SIP/2.0 400 Bad Request\r\n\r\n')
+            
+        if valid_metod and valid_request:     
+            if metod == 'INVITE':
+                self.wfile.write(bytes('SIP/2.0 100 Trying\r\n\r\n'
+                                       'SIP/2.0 180 Ring\r\n\r\n'
+                                       'SIP/2.0 200 OK\r\n\r\n', 'utf-8'))
+            elif metod == 'ACK':
+                os.system('./mp32rtp -i 127.0.0.1 -p 23032 < ' +           
+                          fichero_audio)
+            elif metod == 'BYE':
+                self.wfile.write(b'SIP/2.0 200 OK\r\n\r\n')
+        
 if __name__ == "__main__":
-    # Creamos servidor de eco y escuchamos
-    serv = socketserver.UDPServer(('', 6001), EchoHandler)
-    print("Lanzando servidor UDP de eco...")
-    serv.serve_forever()
+    try:
+        serv = socketserver.UDPServer((sys.argv[1], int(sys.argv[2])), EchoHandler)
+        fichero_audio = sys.argv[3]
+        if not os.path.isfile(fichero_audio):
+            sys.exit('File Error: ' + fichero_audio + ' does not exist')
+        print("Listening...")
+    except IndexError:
+        sys.exit('Usage: server.py IP port audio_file')
+       
+    try:
+        serv.serve_forever()
+    except KeyboardInterrupt:
+        print('Finalizado servidor')
