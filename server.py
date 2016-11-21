@@ -10,9 +10,6 @@ import os
 
 
 class EchoHandler(socketserver.DatagramRequestHandler):
-    """
-    Echo server class
-    """
 
     def handle(self):
         valid_metod = False
